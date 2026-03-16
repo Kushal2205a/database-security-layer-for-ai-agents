@@ -1,19 +1,32 @@
 version: '3.8'
+
 services:
-  weir-proxy:
+
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      - WEIR_DB_PATH=/data/weir.db
+    restart: unless-stopped
+
+  proxy:
     build: ./proxy
     ports:
-      - "5433:5433"
+      - "5455:5455"
     environment:
-      - WEIR_API_KEY=${WEIR_API_KEY}
-      - WEIR_DASHBOARD_URL=${WEIR_DASHBOARD_URL:-http://host.docker.internal:8000}
-      - WEIR_TARGET_HOST=host.docker.internal
+      - WEIR_TARGET_HOST=${WEIR_TARGET_HOST:-host.docker.internal}
       - WEIR_TARGET_PORT=${WEIR_TARGET_PORT:-5432}
       - WEIR_TARGET_DB=${WEIR_TARGET_DB:-postgres}
       - WEIR_TARGET_USER=${WEIR_TARGET_USER:-postgres}
       - WEIR_TARGET_PASSWORD=${WEIR_TARGET_PASSWORD:-}
-      - WEIR_SUPABASE_URL=${WEIR_SUPABASE_URL}
-      - WEIR_SERVICE_KEY=${WEIR_SERVICE_KEY}
+      - WEIR_LISTEN_PORT=5455
+      - WEIR_DASHBOARD_URL=http://dashboard:8000
       - WEIR_APPROVAL_TIMEOUT=${WEIR_APPROVAL_TIMEOUT:-60}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      - dashboard
+    restart: unless-stopped
